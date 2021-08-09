@@ -21,6 +21,7 @@ def connect ():
     #return con
 @app.route('/', methods=['POST'])
 def UpdateUser():
+    try:
         con=connect()
         user = request.get_json()
         lastkey=list(user.keys())[-1]
@@ -40,7 +41,7 @@ def UpdateUser():
         cur.close()
         con.close()
         return jsonify('success')
-        #except Exception:
+    except Exception:
         cur.close()
         return jsonify('Error: unable to update items')        
 if __name__ == '__main__':
