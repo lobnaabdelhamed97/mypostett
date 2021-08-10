@@ -1,9 +1,6 @@
 from flask.json import jsonify
 import mysql.connector
-#from flask import current_app as app
-from config import app
-import MySQLdb
-import MySQLdb.cursors
+from flask import current_app as app
 
 class DBConnector:
     """
