@@ -28,6 +28,7 @@ def update():
         print(query)   
     
         cursor.execute(query)
+        database_connector.commit()
         return jsonify("good update")
     except:
         return jsonify("error in update")

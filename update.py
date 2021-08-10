@@ -1,28 +1,34 @@
 from flask import request
 from flask.json import jsonify
-from flask_mysqldb import MySQL
 from config import app
-import pymysql
-from pymysql import connect,Error
+import mysql.connector
+from database.DBConnector import DBConnector
 # Connect to the MySQL Database Server
-def connect ():
+def connectDB(query):
     try:
-        with pymysql.connect(
-            host="127.0.0.1",
-            user="root",            
-            password='',
-            database="postett_local",
-    ) as connection:
-            return connection
-    except Error as e:
-        return e
-    #mysql = MySQL(app)
-    #con = mysql.connection
-    #return con
+        connector = DBConnector()
+        mydb = connector.connect_database()
+        if mydb.is_connected():
+            mycursor = mydb.cursor(dictionary=True)  # Creating a cursor object using
+            mycursor.execute(query)
+            mydb.commit()
+            return jsonify("successfull update")
+
+
+    except mysql.connector.Error as err:
+        return f"Something went wrong: {err}"
+
+
+    finally:
+        if mydb.is_connected():
+            mycursor.close()
+            mydb.close()
+            
+
 @app.route('/', methods=['POST'])
 def UpdateUser():
-    try:
-        con=connect()
+    
+
         user = request.get_json()
         lastkey=list(user.keys())[-1]
         query="UPDATE users SET "
@@ -34,15 +40,8 @@ def UpdateUser():
                 else:
                     query=query+key+" = "+"'"+user[key]+"'"+','
         query=query+" WHERE id = "+"'"+user['id']+"'"+";"    
-        cur=con.cursor()
-        print(query)
-        #try:
-        cur.execute(query)
-        cur.close()
-        con.close()
-        return jsonify('success')
-    except Exception:
-        cur.close()
-        return jsonify('Error: unable to update items')        
+        result=connectDB(query)
+        return result
+       
 if __name__ == '__main__':
     app.run()
