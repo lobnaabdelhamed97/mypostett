@@ -1,4 +1,3 @@
-from flask.json import jsonify
 import mysql.connector
 from flask import current_app as app
 
