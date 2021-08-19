@@ -4,7 +4,7 @@ from config import app
 import mysql.connector
 from database.DBConnector import DBConnector
 # Connect to the MySQL Database Server
-def connectDB(select_query,update_query):
+def connectDB(select_query,edit_query,delete_query=""):
     try:
         connector = DBConnector()
         mydb = connector.connect_database()
@@ -13,7 +13,10 @@ def connectDB(select_query,update_query):
             mycursor.execute(select_query)
             selectresult = mycursor.fetchall()
             if mycursor.rowcount > 0:
-                mycursor.execute(update_query)
+                if(delete_query!=""):
+                    mycursor.execute(delete_query)
+                    mydb.commit()
+                mycursor.execute(edit_query)
                 mydb.commit()
                 return jsonify("successfull update")
             else:
@@ -26,11 +29,8 @@ def connectDB(select_query,update_query):
             mycursor.close()
             mydb.close()
             
-
-@app.route('/', methods=['POST'])
-def UpdateUser():
-    
-
+@app.route('/editAccount', methods=['POST'])
+def UpdateUser():    
         user = request.get_json()
         select_query="SELECT * from users WHERE id = "+"'"+user['id']+"'"+";"
 
@@ -39,13 +39,25 @@ def UpdateUser():
         for key in user:
             if (key!='id'):
                 if (key==lastkey):
-
                     update_query=update_query+key+" = "+"'"+user[key]+"'"
                 else:
                     update_query=update_query+key+" = "+"'"+user[key]+"'"+','
         update_query=update_query+" WHERE id = "+"'"+user['id']+"'"+";"    
         result=connectDB(select_query,update_query)
         return result
-       
+@app.route('/updateEmail', methods=['POST'])
+def updateEmail():
+    emaildetails=request.get_json()
+    userid=emaildetails['user_id']
+    marketingEmail=emaildetails['subscription_status']
+    radioSelling=emaildetails['selling_notification']
+    radioBuying=emaildetails['buying_notification']
+    select_query="SELECT * from email_preferences WHERE user_id = "+"'"+emaildetails['user_id']+"'"+";"
+    delete_query="DELETE FROM email_preferences WHERE user_id = "+"'"+emaildetails['user_id']+"'"+";"
+    insert_query="INSERT INTO email_preferences(user_id,subscription_status,selling_notification,buying_notification) VALUES ("+userid+","+marketingEmail+","+radioSelling+","+radioBuying+");"
+    result=connectDB(select_query,insert_query,delete_query)
+    return result
+
+
 if __name__ == '__main__':
     app.run()
